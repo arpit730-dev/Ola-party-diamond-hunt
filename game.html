@@ -26,6 +26,57 @@
     <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
 
     <script>
+        import { getFirestore, doc, setDoc, getDoc, updateDoc } from "firebase/firestore";
+
+// Initialize Firestore
+const db = getFirestore();
+
+// User logged in hone par data save/load karein
+auth.onAuthStateChanged(async (user) => {
+    if (user) {
+        // User logged in hai
+        const userRef = doc(db, "users", user.uid);
+
+        // Check if user exists in Firestore
+        const docSnap = await getDoc(userRef);
+        
+        if (!docSnap.exists()) {
+            // New user - initialize data
+            await setDoc(userRef, {
+                email: user.email,
+                diamonds: 0,
+                level: 1,
+                lastLogin: new Date()
+            });
+        } else {
+            // Existing user - load game data
+            const userData = docSnap.data();
+            console.log("Loaded user data:", userData);
+            loadGameProgress(userData);
+        }
+    } else {
+        // User not logged in, redirect to login
+        window.location.href = "login.html";
+    }
+});
+
+// Game progress save karne ka function
+async function saveGameProgress(data) {
+    const user = auth.currentUser;
+    if (user) {
+        await updateDoc(doc(db, "users", user.uid), {
+            diamonds: data.diamonds,
+            level: data.level,
+            lastPlayed: new Date()
+        });
+    }
+}
+
+// Example: Game mein diamond collect karne par
+function collectDiamond() {
+    // ... Game logic
+    saveGameProgress({ diamonds: newDiamondCount, level: currentLevel });
+}
         // Firebase configuration (must match your login.html config)
         const firebaseConfig = {
             apiKey: "YOUR_API_KEY",
