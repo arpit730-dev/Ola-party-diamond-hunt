@@ -34,6 +34,19 @@
         }
 
         // [Rest of your login page JavaScript]
+<script>
+    // Check if coming from logout
+    const urlParams = new URLSearchParams(window.location.search);
+    if (urlParams.has('logout')) {
+        Swal.fire({
+            title: 'Logged Out',
+            text: 'You have been successfully logged out',
+            icon: 'success'
+        });
+        // Clean the URL
+        window.history.replaceState({}, document.title, window.location.pathname);
+    }
+</script>
     </script>
 </body>
 </html>
