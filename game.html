@@ -3,39 +3,41 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>OLA Party Diamond Hunt - Login</title>
+    <title>Diamond Hunt - Authentication</title>
     <style>
-        * {
-            box-sizing: border-box;
-            margin: 0;
-            padding: 0;
-            font-family: 'Poppins', sans-serif;
-        }
-
+        /* Base Styles */
         body {
             background: linear-gradient(135deg, #1A1A2E 0%, #16213E 100%);
             color: white;
+            font-family: 'Poppins', sans-serif;
+            margin: 0;
+            padding: 0;
+            min-height: 100vh;
             display: flex;
             justify-content: center;
             align-items: center;
-            min-height: 100vh;
-            padding: 20px;
         }
 
-        .auth-container {
+        /* Auth Container */
+        .container {
+            width: 100%;
+            max-width: 1200px;
+            padding: 20px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+        }
+
+        /* Login/Signup Form */
+        .auth-box {
             background: rgba(0, 0, 0, 0.7);
             border-radius: 15px;
-            box-shadow: 0 10px 25px rgba(0, 0, 0, 0.5);
+            padding: 40px;
             width: 100%;
             max-width: 400px;
-            padding: 30px;
+            box-shadow: 0 10px 25px rgba(0, 0, 0, 0.5);
             text-align: center;
-            animation: fadeIn 0.5s ease;
-        }
-
-        @keyframes fadeIn {
-            from { opacity: 0; transform: translateY(-20px); }
-            to { opacity: 1; transform: translateY(0); }
+            transition: all 0.5s ease;
         }
 
         .logo {
@@ -47,23 +49,14 @@
             justify-content: center;
         }
 
-        .logo span {
-            margin-left: 10px;
-        }
-
         h2 {
             margin-bottom: 25px;
             color: #FFD700;
         }
 
-        .auth-form {
-            display: flex;
-            flex-direction: column;
-            gap: 20px;
-        }
-
         .input-group {
             position: relative;
+            margin-bottom: 20px;
         }
 
         .input-group input {
@@ -102,92 +95,133 @@
             color: #FFD700;
         }
 
-        button {
+        .auth-button {
             background: linear-gradient(to right, #4A148C, #7B1FA2);
             color: white;
             border: none;
             padding: 15px;
+            width: 100%;
             border-radius: 8px;
             font-size: 1rem;
             font-weight: bold;
             cursor: pointer;
             transition: all 0.3s ease;
+            margin-top: 10px;
         }
 
-        button:hover {
+        .auth-button:hover {
             transform: translateY(-2px);
             box-shadow: 0 5px 15px rgba(0, 0, 0, 0.3);
         }
 
-        .auth-toggle {
+        .toggle-auth {
             margin-top: 20px;
             color: #aaa;
             cursor: pointer;
-            transition: all 0.3s ease;
         }
 
-        .auth-toggle:hover {
-            color: white;
-            text-decoration: underline;
+        .toggle-auth span {
+            color: #64FFDA;
+            font-weight: bold;
         }
 
         .error-message {
             color: #FF5252;
-            margin-top: 10px;
-            font-size: 0.9rem;
+            margin: 10px 0;
             min-height: 20px;
         }
 
-        .forgot-password {
-            text-align: right;
-            font-size: 0.9rem;
-            color: #64FFDA;
-            cursor: pointer;
-            margin-top: -15px;
+        /* Logout Page */
+        .logout-box {
+            background: rgba(0, 0, 0, 0.7);
+            border-radius: 15px;
+            padding: 40px;
+            width: 100%;
+            max-width: 500px;
+            box-shadow: 0 10px 25px rgba(0, 0, 0, 0.5);
+            text-align: center;
+            display: none;
         }
 
-        .forgot-password:hover {
-            text-decoration: underline;
+        .logout-message {
+            margin-bottom: 30px;
+        }
+
+        .login-again {
+            background: linear-gradient(to right, #4A148C, #7B1FA2);
+            color: white;
+            border: none;
+            padding: 15px 30px;
+            border-radius: 25px;
+            font-size: 1rem;
+            font-weight: bold;
+            cursor: pointer;
+            text-decoration: none;
+            display: inline-block;
+            transition: all 0.3s;
+        }
+
+        .login-again:hover {
+            transform: scale(1.05);
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.3);
         }
     </style>
 </head>
 <body>
-    <div class="auth-container" id="auth-container">
-        <div class="logo">
-            <span>💎</span>
-            <span>Diamond Hunt</span>
+    <div class="container">
+        <!-- Login/Signup Form -->
+        <div class="auth-box" id="auth-box">
+            <div class="logo">
+                <span>💎</span>
+                <span>Diamond Hunt</span>
+            </div>
+            <h2 id="auth-title">Login</h2>
+            
+            <div class="auth-form">
+                <div class="input-group">
+                    <input type="email" id="auth-email" required>
+                    <label for="auth-email">Email</label>
+                </div>
+                
+                <div class="input-group">
+                    <input type="password" id="auth-password" required>
+                    <label for="auth-password">Password</label>
+                </div>
+                
+                <div class="error-message" id="error-message"></div>
+                
+                <button class="auth-button" id="auth-button">Login</button>
+                
+                <div class="toggle-auth" id="toggle-auth">
+                    Don't have an account? <span>Sign Up</span>
+                </div>
+            </div>
         </div>
-        <h2 id="auth-title">Login</h2>
-        
-        <div class="auth-form" id="auth-form">
-            <div class="input-group">
-                <input type="email" id="auth-email" required>
-                <label for="auth-email">Email</label>
+
+        <!-- Logout Page -->
+        <div class="logout-box" id="logout-box">
+            <div class="logo">
+                <span>💎</span>
+                <span>Diamond Hunt</span>
+            </div>
+            <h2>Logged Out</h2>
+            
+            <div class="logout-message">
+                <p>You have been successfully logged out.</p>
+                <p>Your game progress has been saved.</p>
             </div>
             
-            <div class="input-group">
-                <input type="password" id="auth-password" required>
-                <label for="auth-password">Password</label>
-            </div>
-            
-            <div class="forgot-password" id="forgot-password">Forgot Password?</div>
-            
-            <div class="error-message" id="error-message"></div>
-            
-            <button id="auth-button">Login</button>
-            
-            <div class="auth-toggle" id="auth-toggle">
-                Don't have an account? <span style="color: #64FFDA;">Sign Up</span>
-            </div>
+            <button class="login-again" id="login-again">Login Again</button>
         </div>
     </div>
 
     <!-- Firebase SDK -->
     <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-app.js"></script>
     <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-auth.js"></script>
-    
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+
     <script>
-        // Firebase configuration - replace with your actual config
+        // Firebase configuration
         const firebaseConfig = {
             apiKey: "YOUR_API_KEY",
             authDomain: "YOUR_AUTH_DOMAIN",
@@ -202,31 +236,59 @@
         const auth = firebase.auth();
 
         // DOM Elements
+        const authBox = document.getElementById('auth-box');
+        const logoutBox = document.getElementById('logout-box');
         const authTitle = document.getElementById('auth-title');
         const authButton = document.getElementById('auth-button');
-        const authToggle = document.getElementById('auth-toggle');
+        const toggleAuth = document.getElementById('toggle-auth');
         const authEmail = document.getElementById('auth-email');
         const authPassword = document.getElementById('auth-password');
         const errorMessage = document.getElementById('error-message');
-        const forgotPassword = document.getElementById('forgot-password');
+        const loginAgain = document.getElementById('login-again');
         
         let isLoginMode = true;
 
+        // Check initial auth state
+        auth.onAuthStateChanged((user) => {
+            if (user) {
+                // User is logged in, redirect to game
+                window.location.href = "game.html";
+            } else {
+                // Check if coming from logout
+                const urlParams = new URLSearchParams(window.location.search);
+                if (urlParams.has('logout')) {
+                    showLogoutPage();
+                    // Clean the URL
+                    window.history.replaceState({}, document.title, window.location.pathname);
+                }
+            }
+        });
+
+        // Show logout page
+        function showLogoutPage() {
+            authBox.style.display = 'none';
+            logoutBox.style.display = 'block';
+        }
+
+        // Show auth page
+        function showAuthPage() {
+            logoutBox.style.display = 'none';
+            authBox.style.display = 'block';
+        }
+
         // Toggle between Login and Signup
-        authToggle.addEventListener('click', () => {
+        toggleAuth.addEventListener('click', () => {
             isLoginMode = !isLoginMode;
             errorMessage.textContent = '';
             
             if (isLoginMode) {
                 authTitle.textContent = 'Login';
                 authButton.textContent = 'Login';
-                authToggle.innerHTML = 'Don\'t have an account? <span style="color: #64FFDA;">Sign Up</span>';
-                forgotPassword.style.display = 'block';
+                toggleAuth.innerHTML = 'Don\'t have an account? <span>Sign Up</span>';
             } else {
                 authTitle.textContent = 'Sign Up';
                 authButton.textContent = 'Sign Up';
-                authToggle.innerHTML = 'Already have an account? <span style="color: #64FFDA;">Login</span>';
-                forgotPassword.style.display = 'none';
+                toggleAuth.innerHTML = 'Already have an account? <span>Login</span>';
             }
         });
 
@@ -244,9 +306,8 @@
             if (isLoginMode) {
                 // Login
                 auth.signInWithEmailAndPassword(email, password)
-                    .then((userCredential) => {
-                        // Success - redirect to game page
-                        window.location.href = 'game.html';
+                    .then(() => {
+                        window.location.href = "game.html";
                     })
                     .catch((error) => {
                         showError(error);
@@ -254,9 +315,8 @@
             } else {
                 // Sign Up
                 auth.createUserWithEmailAndPassword(email, password)
-                    .then((userCredential) => {
-                        // Success - redirect to game page
-                        window.location.href = 'game.html';
+                    .then(() => {
+                        window.location.href = "game.html";
                     })
                     .catch((error) => {
                         showError(error);
@@ -264,30 +324,16 @@
             }
         });
 
-        // Forgot password
-        forgotPassword.addEventListener('click', () => {
-            const email = authEmail.value;
-            
-            if (!email) {
-                errorMessage.textContent = 'Please enter your email first';
-                return;
-            }
-            
-            auth.sendPasswordResetEmail(email)
-                .then(() => {
-                    errorMessage.textContent = 'Password reset email sent!';
-                    errorMessage.style.color = '#64FFDA';
-                })
-                .catch((error) => {
-                    showError(error);
-                });
+        // Login Again button
+        loginAgain.addEventListener('click', () => {
+            showAuthPage();
         });
 
         // Show error message
         function showError(error) {
             let message = error.message;
             
-            // More user-friendly error messages
+            // User-friendly error messages
             if (error.code === 'auth/user-not-found') {
                 message = 'No account found with this email';
             } else if (error.code === 'auth/wrong-password') {
@@ -301,16 +347,7 @@
             }
             
             errorMessage.textContent = message;
-            errorMessage.style.color = '#FF5252';
         }
-
-        // Check if user is already logged in
-        auth.onAuthStateChanged((user) => {
-            if (user) {
-                // User is logged in, redirect to game
-                window.location.href = 'game.html';
-            }
-        });
     </script>
 </body>
 </html>
