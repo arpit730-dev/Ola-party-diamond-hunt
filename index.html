@@ -661,6 +661,25 @@
 
         // Initialize the game
         window.onload = initGame;
+        // Handle successful login/signup
+    function handleAuthSuccess() {
+        // Redirect to game.html after successful authentication
+        window.location.href = "game.html";
+        
+        // Or alternatively, you can show the game container if using single page:
+        // document.getElementById('auth-container').style.display = 'none';
+        // document.getElementById('game-container').style.display = 'block';
+        // initGame(); // Initialize your game
+    }
+
+    // In your auth success handlers, replace the redirect with:
+    auth.signInWithEmailAndPassword(email, password)
+        .then(handleAuthSuccess)
+        .catch(showError);
+        
+    auth.createUserWithEmailAndPassword(email, password)
+        .then(handleAuthSuccess)
+        .catch(showError);
     </script>
 </body>
 </html>
