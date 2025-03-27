@@ -4,79 +4,57 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Diamond Hunt - Game</title>
-    <!-- Your game styles here -->
     <style>
-        /* Your existing game styles */
+        body {
+            margin: 0;
+            padding: 0;
+            font-family: Arial, sans-serif;
+            background-color: #1a1a2e;
+            color: white;
+        }
+        #game-container {
+            width: 800px;
+            height: 600px;
+            margin: 20px auto;
+            background-color: #16213e;
+            border: 2px solid #4A148C;
+            position: relative;
+        }
+        #logout-button {
+            position: absolute;
+            top: 10px;
+            right: 10px;
+            padding: 8px 15px;
+            background: #4A148C;
+            color: white;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+        }
+        #logout-button:hover {
+            background: #7B1FA2;
+        }
     </style>
 </head>
 <body>
-    <!-- Your game content -->
     <div id="game-container">
-        <!-- Game elements here -->
+        <!-- Game elements will be added here -->
+        <h1 style="text-align: center; color: #FFD700;">Diamond Hunt</h1>
+        <div id="game-stats" style="padding: 10px;">
+            <p>Diamonds: <span id="diamond-count">0</span></p>
+            <p>Level: <span id="level-count">1</span></p>
+        </div>
     </div>
 
-    <!-- Add a logout button somewhere in your game UI -->
-    <button id="logout-button" style="position: absolute; top: 10px; right: 10px; padding: 8px 15px; background: #4A148C; color: white; border: none; border-radius: 5px; cursor: pointer;">
-        Logout
-    </button>
+    <button id="logout-button">Logout</button>
 
-    <!-- Firebase SDK (same as in login.html) -->
+    <!-- Firebase SDKs -->
     <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-app.js"></script>
     <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-auth.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-firestore.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
 
     <script>
-        import { getFirestore, doc, setDoc, getDoc, updateDoc } from "firebase/firestore";
-
-// Initialize Firestore
-const db = getFirestore();
-
-// User logged in hone par data save/load karein
-auth.onAuthStateChanged(async (user) => {
-    if (user) {
-        // User logged in hai
-        const userRef = doc(db, "users", user.uid);
-
-        // Check if user exists in Firestore
-        const docSnap = await getDoc(userRef);
-        
-        if (!docSnap.exists()) {
-            // New user - initialize data
-            await setDoc(userRef, {
-                email: user.email,
-                diamonds: 0,
-                level: 1,
-                lastLogin: new Date()
-            });
-        } else {
-            // Existing user - load game data
-            const userData = docSnap.data();
-            console.log("Loaded user data:", userData);
-            loadGameProgress(userData);
-        }
-    } else {
-        // User not logged in, redirect to login
-        window.location.href = "login.html";
-    }
-});
-
-// Game progress save karne ka function
-async function saveGameProgress(data) {
-    const user = auth.currentUser;
-    if (user) {
-        await updateDoc(doc(db, "users", user.uid), {
-            diamonds: data.diamonds,
-            level: data.level,
-            lastPlayed: new Date()
-        });
-    }
-}
-
-// Example: Game mein diamond collect karne par
-function collectDiamond() {
-    // ... Game logic
-    saveGameProgress({ diamonds: newDiamondCount, level: currentLevel });
-}
         // Firebase configuration (must match your login.html config)
         const firebaseConfig = {
             apiKey: "YOUR_API_KEY",
@@ -90,29 +68,113 @@ function collectDiamond() {
         // Initialize Firebase
         firebase.initializeApp(firebaseConfig);
         const auth = firebase.auth();
+        const db = firebase.firestore();
+
+        // Game state variables
+        let gameState = {
+            diamonds: 0,
+            level: 1,
+            lastPlayed: null
+        };
 
         // Check authentication when game loads
-        auth.onAuthStateChanged((user) => {
+        auth.onAuthStateChanged(async (user) => {
             if (!user) {
                 // If not logged in, redirect to login page
                 window.location.href = "login.html";
             } else {
-                // User is logged in, initialize game
+                // User is logged in, load game data
+                await loadGameData(user.uid);
                 initGame();
             }
         });
 
+        // Load game data from Firestore
+        async function loadGameData(userId) {
+            try {
+                const userRef = db.collection("users").doc(userId);
+                const doc = await userRef.get();
+                
+                if (doc.exists) {
+                    gameState = doc.data();
+                    updateUI();
+                    console.log("Game data loaded:", gameState);
+                } else {
+                    // Create new user data if doesn't exist
+                    await userRef.set({
+                        email: auth.currentUser.email,
+                        diamonds: 0,
+                        level: 1,
+                        lastLogin: new Date(),
+                        lastPlayed: null
+                    });
+                    console.log("New user data created");
+                }
+            } catch (error) {
+                console.error("Error loading game data:", error);
+                Swal.fire({
+                    title: 'Error',
+                    text: 'Could not load game data',
+                    icon: 'error'
+                });
+            }
+        }
+
+        // Save game data to Firestore
+        async function saveGameData() {
+            try {
+                const userId = auth.currentUser.uid;
+                gameState.lastPlayed = new Date();
+                
+                await db.collection("users").doc(userId).update(gameState);
+                console.log("Game data saved");
+            } catch (error) {
+                console.error("Error saving game data:", error);
+            }
+        }
+
+        // Update game UI
+        function updateUI() {
+            document.getElementById('diamond-count').textContent = gameState.diamonds;
+            document.getElementById('level-count').textContent = gameState.level;
+        }
+
         // Add logout button functionality
-        document.getElementById('logout-button').addEventListener('click', () => {
+        document.getElementById('logout-button').addEventListener('click', async () => {
+            await saveGameData();
             auth.signOut().then(() => {
                 window.location.href = "login.html?logout=true";
             });
         });
 
+        // Example game functions
+        function collectDiamond() {
+            gameState.diamonds++;
+            updateUI();
+            saveGameData();
+        }
+
+        function levelUp() {
+            gameState.level++;
+            updateUI();
+            saveGameData();
+        }
+
         // Your game initialization function
         function initGame() {
-            // Your game initialization code here
             console.log("Game initialized for logged in user");
+            
+            // Example: Add click event to simulate diamond collection
+            document.getElementById('game-container').addEventListener('click', () => {
+                collectDiamond();
+            });
+            
+            // Example: Add button to simulate level up
+            const levelUpBtn = document.createElement('button');
+            levelUpBtn.textContent = 'Level Up';
+            levelUpBtn.style.margin = '10px';
+            levelUpBtn.addEventListener('click', levelUp);
+            document.getElementById('game-stats').appendChild(levelUpBtn);
         }
     </script>
 </body>
