@@ -1,0 +1,316 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>OLA Party Diamond Hunt - Login</title>
+    <style>
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+            font-family: 'Poppins', sans-serif;
+        }
+
+        body {
+            background: linear-gradient(135deg, #1A1A2E 0%, #16213E 100%);
+            color: white;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+            padding: 20px;
+        }
+
+        .auth-container {
+            background: rgba(0, 0, 0, 0.7);
+            border-radius: 15px;
+            box-shadow: 0 10px 25px rgba(0, 0, 0, 0.5);
+            width: 100%;
+            max-width: 400px;
+            padding: 30px;
+            text-align: center;
+            animation: fadeIn 0.5s ease;
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(-20px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        .logo {
+            font-size: 2.5rem;
+            margin-bottom: 20px;
+            color: #FFD700;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .logo span {
+            margin-left: 10px;
+        }
+
+        h2 {
+            margin-bottom: 25px;
+            color: #FFD700;
+        }
+
+        .auth-form {
+            display: flex;
+            flex-direction: column;
+            gap: 20px;
+        }
+
+        .input-group {
+            position: relative;
+        }
+
+        .input-group input {
+            width: 100%;
+            padding: 15px;
+            background: rgba(255, 255, 255, 0.1);
+            border: 1px solid #64FFDA;
+            border-radius: 8px;
+            color: white;
+            font-size: 1rem;
+            transition: all 0.3s ease;
+        }
+
+        .input-group input:focus {
+            outline: none;
+            border-color: #FFD700;
+            box-shadow: 0 0 10px rgba(255, 215, 0, 0.3);
+        }
+
+        .input-group label {
+            position: absolute;
+            left: 15px;
+            top: 15px;
+            color: #aaa;
+            pointer-events: none;
+            transition: all 0.3s ease;
+        }
+
+        .input-group input:focus + label,
+        .input-group input:valid + label {
+            top: -10px;
+            left: 10px;
+            font-size: 0.8rem;
+            background: #1A1A2E;
+            padding: 0 5px;
+            color: #FFD700;
+        }
+
+        button {
+            background: linear-gradient(to right, #4A148C, #7B1FA2);
+            color: white;
+            border: none;
+            padding: 15px;
+            border-radius: 8px;
+            font-size: 1rem;
+            font-weight: bold;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+
+        button:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.3);
+        }
+
+        .auth-toggle {
+            margin-top: 20px;
+            color: #aaa;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+
+        .auth-toggle:hover {
+            color: white;
+            text-decoration: underline;
+        }
+
+        .error-message {
+            color: #FF5252;
+            margin-top: 10px;
+            font-size: 0.9rem;
+            min-height: 20px;
+        }
+
+        .forgot-password {
+            text-align: right;
+            font-size: 0.9rem;
+            color: #64FFDA;
+            cursor: pointer;
+            margin-top: -15px;
+        }
+
+        .forgot-password:hover {
+            text-decoration: underline;
+        }
+    </style>
+</head>
+<body>
+    <div class="auth-container" id="auth-container">
+        <div class="logo">
+            <span>💎</span>
+            <span>Diamond Hunt</span>
+        </div>
+        <h2 id="auth-title">Login</h2>
+        
+        <div class="auth-form" id="auth-form">
+            <div class="input-group">
+                <input type="email" id="auth-email" required>
+                <label for="auth-email">Email</label>
+            </div>
+            
+            <div class="input-group">
+                <input type="password" id="auth-password" required>
+                <label for="auth-password">Password</label>
+            </div>
+            
+            <div class="forgot-password" id="forgot-password">Forgot Password?</div>
+            
+            <div class="error-message" id="error-message"></div>
+            
+            <button id="auth-button">Login</button>
+            
+            <div class="auth-toggle" id="auth-toggle">
+                Don't have an account? <span style="color: #64FFDA;">Sign Up</span>
+            </div>
+        </div>
+    </div>
+
+    <!-- Firebase SDK -->
+    <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-app.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-auth.js"></script>
+    
+    <script>
+        // Firebase configuration - replace with your actual config
+        const firebaseConfig = {
+            apiKey: "YOUR_API_KEY",
+            authDomain: "YOUR_AUTH_DOMAIN",
+            projectId: "YOUR_PROJECT_ID",
+            storageBucket: "YOUR_STORAGE_BUCKET",
+            messagingSenderId: "YOUR_SENDER_ID",
+            appId: "YOUR_APP_ID"
+        };
+
+        // Initialize Firebase
+        firebase.initializeApp(firebaseConfig);
+        const auth = firebase.auth();
+
+        // DOM Elements
+        const authTitle = document.getElementById('auth-title');
+        const authButton = document.getElementById('auth-button');
+        const authToggle = document.getElementById('auth-toggle');
+        const authEmail = document.getElementById('auth-email');
+        const authPassword = document.getElementById('auth-password');
+        const errorMessage = document.getElementById('error-message');
+        const forgotPassword = document.getElementById('forgot-password');
+        
+        let isLoginMode = true;
+
+        // Toggle between Login and Signup
+        authToggle.addEventListener('click', () => {
+            isLoginMode = !isLoginMode;
+            errorMessage.textContent = '';
+            
+            if (isLoginMode) {
+                authTitle.textContent = 'Login';
+                authButton.textContent = 'Login';
+                authToggle.innerHTML = 'Don\'t have an account? <span style="color: #64FFDA;">Sign Up</span>';
+                forgotPassword.style.display = 'block';
+            } else {
+                authTitle.textContent = 'Sign Up';
+                authButton.textContent = 'Sign Up';
+                authToggle.innerHTML = 'Already have an account? <span style="color: #64FFDA;">Login</span>';
+                forgotPassword.style.display = 'none';
+            }
+        });
+
+        // Handle form submission
+        authButton.addEventListener('click', () => {
+            const email = authEmail.value;
+            const password = authPassword.value;
+            errorMessage.textContent = '';
+            
+            if (!email || !password) {
+                errorMessage.textContent = 'Please fill in all fields';
+                return;
+            }
+            
+            if (isLoginMode) {
+                // Login
+                auth.signInWithEmailAndPassword(email, password)
+                    .then((userCredential) => {
+                        // Success - redirect to game page
+                        window.location.href = 'game.html';
+                    })
+                    .catch((error) => {
+                        showError(error);
+                    });
+            } else {
+                // Sign Up
+                auth.createUserWithEmailAndPassword(email, password)
+                    .then((userCredential) => {
+                        // Success - redirect to game page
+                        window.location.href = 'game.html';
+                    })
+                    .catch((error) => {
+                        showError(error);
+                    });
+            }
+        });
+
+        // Forgot password
+        forgotPassword.addEventListener('click', () => {
+            const email = authEmail.value;
+            
+            if (!email) {
+                errorMessage.textContent = 'Please enter your email first';
+                return;
+            }
+            
+            auth.sendPasswordResetEmail(email)
+                .then(() => {
+                    errorMessage.textContent = 'Password reset email sent!';
+                    errorMessage.style.color = '#64FFDA';
+                })
+                .catch((error) => {
+                    showError(error);
+                });
+        });
+
+        // Show error message
+        function showError(error) {
+            let message = error.message;
+            
+            // More user-friendly error messages
+            if (error.code === 'auth/user-not-found') {
+                message = 'No account found with this email';
+            } else if (error.code === 'auth/wrong-password') {
+                message = 'Incorrect password';
+            } else if (error.code === 'auth/email-already-in-use') {
+                message = 'Email already in use';
+            } else if (error.code === 'auth/weak-password') {
+                message = 'Password should be at least 6 characters';
+            } else if (error.code === 'auth/invalid-email') {
+                message = 'Invalid email address';
+            }
+            
+            errorMessage.textContent = message;
+            errorMessage.style.color = '#FF5252';
+        }
+
+        // Check if user is already logged in
+        auth.onAuthStateChanged((user) => {
+            if (user) {
+                // User is logged in, redirect to game
+                window.location.href = 'game.html';
+            }
+        });
+    </script>
+</body>
+</html>
