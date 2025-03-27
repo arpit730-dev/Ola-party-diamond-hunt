@@ -1,0 +1,71 @@
+<div class="game-container">
+  <!-- User Stats Header -->
+  <div class="user-stats">
+    <div class="stat-box">
+      <span class="stat-label">Remaining</span>
+      <span class="stat-value" id="remaining-diamonds">1</span>
+    </div>
+    <div class="stat-box">
+      <span class="stat-label">Today</span>
+      <span class="stat-value" id="today-change">+0</span>
+    </div>
+    <div class="stat-box">
+      <span class="stat-label">Lv</span>
+      <span class="stat-value">13</span>
+    </div>
+  </div>
+
+  <!-- Game Instructions -->
+  <div class="instructions">
+    <p>1. Select amount</p>
+    <p>2. Select animal</p>
+  </div>
+
+  <!-- Animal Betting Grid -->
+  <div class="animal-grid">
+    <!-- Hot Animals Section -->
+    <div class="hot-animals">
+      <div class="hot-label">Hot 1-5</div>
+      <div class="animal-row">
+        <div class="animal-card hot" data-animal="rabbit" data-odds="5">
+          <div class="animal-icon">🐰</div>
+          <div class="animal-odds">1:5</div>
+        </div>
+        <!-- Repeat for Hot 2-5 -->
+      </div>
+    </div>
+
+    <!-- Regular Animals Section -->
+    <div class="regular-animals">
+      <div class="animal-card" data-animal="dolphin" data-odds="10">
+        <div class="animal-icon">🐬</div>
+        <div class="animal-odds">1:10</div>
+      </div>
+      <!-- Other animals -->
+    </div>
+  </div>
+
+  <!-- Betting Controls -->
+  <div class="bet-controls">
+    <div class="quick-bet-buttons">
+      <button class="bet-amount" data-amount="50">50</button>
+      <button class="bet-amount" data-amount="500">500</button>
+      <button class="bet-amount" data-amount="1000">1K</button>
+      <button class="bet-amount" data-amount="5000">5K</button>
+    </div>
+    
+    <div class="custom-bet">
+      <input type="number" id="custom-bet-amount" placeholder="Custom amount">
+      <button id="place-bet-btn">BET</button>
+    </div>
+    
+    <div class="auto-bet">
+      <button id="auto-bet-btn">Auto</button>
+    </div>
+  </div>
+
+  <!-- Free Recharge -->
+  <div class="free-recharge">
+    <button id="free-rc-btn">Free 100,000 Diamonds</button>
+  </div>
+  </div>
