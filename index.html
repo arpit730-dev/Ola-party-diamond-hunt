@@ -1,71 +1,655 @@
-<div class="game-container">
-  <!-- User Stats Header -->
-  <div class="user-stats">
-    <div class="stat-box">
-      <span class="stat-label">Remaining</span>
-      <span class="stat-value" id="remaining-diamonds">1</span>
-    </div>
-    <div class="stat-box">
-      <span class="stat-label">Today</span>
-      <span class="stat-value" id="today-change">+0</span>
-    </div>
-    <div class="stat-box">
-      <span class="stat-label">Lv</span>
-      <span class="stat-value">13</span>
-    </div>
-  </div>
 
-  <!-- Game Instructions -->
-  <div class="instructions">
-    <p>1. Select amount</p>
-    <p>2. Select animal</p>
-  </div>
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>OK Party Diamond Hunt</title>
+    <style>
+        /* Base Styles */
+        body {
+            background: linear-gradient(135deg, #1A1A2E 0%, #16213E 100%);
+            color: white;
+            font-family: 'Poppins', sans-serif;
+            margin: 0;
+            padding: 20px;
+        }
 
-  <!-- Animal Betting Grid -->
-  <div class="animal-grid">
-    <!-- Hot Animals Section -->
-    <div class="hot-animals">
-      <div class="hot-label">Hot 1-5</div>
-      <div class="animal-row">
-        <div class="animal-card hot" data-animal="rabbit" data-odds="5">
-          <div class="animal-icon">🐰</div>
-          <div class="animal-odds">1:5</div>
+        .game-container {
+            max-width: 800px;
+            margin: 0 auto;
+        }
+
+        /* User Stats */
+        .user-stats {
+            display: flex;
+            justify-content: space-around;
+            background: rgba(0,0,0,0.3);
+            padding: 10px;
+            border-radius: 10px;
+            margin-bottom: 15px;
+        }
+
+        .stat-box {
+            text-align: center;
+        }
+
+        .stat-label {
+            display: block;
+            font-size: 0.8rem;
+            color: #aaa;
+        }
+
+        .stat-value {
+            font-size: 1.2rem;
+            font-weight: bold;
+            color: #FFD700;
+        }
+
+        /* Game Instructions */
+        .instructions {
+            background: rgba(0,0,0,0.2);
+            padding: 10px;
+            border-radius: 8px;
+            margin-bottom: 20px;
+            text-align: center;
+        }
+
+        /* Round Timer */
+        .round-timer {
+            background: rgba(10, 36, 99, 0.5);
+            padding: 10px;
+            border-radius: 8px;
+            margin-bottom: 20px;
+            text-align: center;
+        }
+
+        #countdown {
+            color: #FFD700;
+            font-weight: bold;
+            font-size: 1.2em;
+        }
+
+        /* Animal Cards */
+        .animal-rows {
+            display: flex;
+            flex-direction: column;
+            gap: 15px;
+            margin-bottom: 20px;
+        }
+
+        .animal-row {
+            display: flex;
+            gap: 15px;
+            justify-content: center;
+        }
+
+        .animal-card {
+            background: rgba(26, 26, 46, 0.7);
+            border-radius: 12px;
+            padding: 15px;
+            text-align: center;
+            transition: all 0.3s ease;
+            border: 2px solid transparent;
+            cursor: pointer;
+            flex: 1;
+            min-width: 0;
+        }
+
+        .animal-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 10px 20px rgba(0,0,0,0.2);
+        }
+
+        .animal-card.selected {
+            border: 2px solid #FFD700;
+            background: rgba(255, 215, 0, 0.1);
+        }
+
+        .animal-card.hot {
+            border: 2px solid #FF5252;
+            background: rgba(255, 82, 82, 0.1);
+        }
+
+        .animal-icon {
+            font-size: 3rem;
+            margin-bottom: 10px;
+        }
+
+        .animal-odds {
+            font-weight: bold;
+            margin-bottom: 10px;
+        }
+
+        /* Hot Label */
+        .hot-label {
+            color: #FF5252;
+            font-weight: bold;
+            text-align: center;
+            margin-bottom: 5px;
+        }
+
+        /* Betting Controls */
+        .bet-controls {
+            background: rgba(0,0,0,0.5);
+            padding: 15px;
+            border-radius: 10px;
+            margin-top: 20px;
+        }
+
+        .quick-bet-buttons {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 15px;
+        }
+
+        .bet-amount {
+            flex: 1;
+            background: #4A148C;
+            color: white;
+            border: none;
+            padding: 8px;
+            border-radius: 5px;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+
+        .bet-amount:hover {
+            background: #7B1FA2;
+            transform: scale(1.05);
+        }
+
+        .custom-bet {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 15px;
+        }
+
+        #custom-bet-amount {
+            flex: 3;
+            background: rgba(255,255,255,0.1);
+            border: 1px solid #64FFDA;
+            color: white;
+            padding: 10px;
+            border-radius: 5px;
+        }
+
+        #place-bet-btn {
+            flex: 1;
+            background: linear-gradient(to right, #4A148C, #7B1FA2);
+            color: white;
+            border: none;
+            border-radius: 5px;
+            padding: 10px;
+            cursor: pointer;
+            font-weight: bold;
+        }
+
+        /* Auto Bet */
+        .auto-bet {
+            text-align: center;
+        }
+
+        #auto-bet-btn {
+            background: linear-gradient(to right, #FF5722, #FF9800);
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 20px;
+            cursor: pointer;
+        }
+
+        /* Free Recharge */
+        .free-recharge {
+            margin-top: 20px;
+            text-align: center;
+        }
+
+        #free-rc-btn {
+            background: linear-gradient(to right, #00C853, #64DD17);
+            color: white;
+            border: none;
+            padding: 12px 25px;
+            border-radius: 25px;
+            font-size: 1rem;
+            font-weight: bold;
+            cursor: pointer;
+            box-shadow: 0 4px 15px rgba(0, 200, 83, 0.3);
+            transition: all 0.3s;
+        }
+
+        #free-rc-btn:hover {
+            transform: scale(1.05);
+            box-shadow: 0 6px 20px rgba(0, 200, 83, 0.4);
+        }
+
+        /* History */
+        .history-container {
+            margin-top: 30px;
+            background: rgba(0,0,0,0.3);
+            padding: 15px;
+            border-radius: 10px;
+        }
+
+        .history-title {
+            margin-top: 0;
+            margin-bottom: 10px;
+        }
+
+        .history-items {
+            display: flex;
+            gap: 10px;
+            overflow-x: auto;
+            padding-bottom: 10px;
+        }
+
+        .history-item {
+            min-width: 60px;
+            text-align: center;
+            background: rgba(255,255,255,0.1);
+            padding: 8px;
+            border-radius: 8px;
+        }
+
+        /* Animations */
+        @keyframes pulse {
+            0% { transform: scale(1); }
+            50% { transform: scale(1.05); }
+            100% { transform: scale(1); }
+        }
+
+        .pulse {
+            animation: pulse 1s infinite;
+        }
+
+        @keyframes winGlow {
+            0% { box-shadow: 0 0 5px #FFD700; }
+            50% { box-shadow: 0 0 20px #FFD700; }
+            100% { box-shadow: 0 0 5px #FFD700; }
+        }
+
+        .win-glow {
+            animation: winGlow 2s infinite;
+        }
+
+        /* Responsive */
+        @media (max-width: 768px) {
+            .animal-row {
+                flex-wrap: wrap;
+            }
+            
+            .animal-card {
+                min-width: calc(50% - 15px);
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="game-container">
+        <!-- User Stats Header -->
+        <div class="user-stats">
+            <div class="stat-box">
+                <span class="stat-label">Remaining</span>
+                <span class="stat-value" id="remaining-diamonds">1</span>
+            </div>
+            <div class="stat-box">
+                <span class="stat-label">Today</span>
+                <span class="stat-value" id="today-change">+0</span>
+            </div>
+            <div class="stat-box">
+                <span class="stat-label">Lv</span>
+                <span class="stat-value">13</span>
+            </div>
         </div>
-        <!-- Repeat for Hot 2-5 -->
-      </div>
+
+        <!-- Round Timer -->
+        <div class="round-timer">
+            <h3>Next Round Starts In: <span id="countdown">30</span>s</h3>
+        </div>
+
+        <!-- Game Instructions -->
+        <div class="instructions">
+            <p>1. Select amount</p>
+            <p>2. Select animal</p>
+        </div>
+
+        <!-- Animal Selection Grid -->
+        <div class="animal-rows" id="animal-rows">
+            <!-- Hot Animals Row -->
+            <div class="hot-label">Hot 1-5</div>
+            <div class="animal-row" id="hot-animals-row">
+                <!-- Hot animals (1:5) will be inserted here -->
+            </div>
+            
+            <!-- Regular Animals Row -->
+            <div class="animal-row" id="regular-animals-row">
+                <!-- Other animals will be inserted here -->
+            </div>
+        </div>
+
+        <!-- Betting Controls -->
+        <div class="bet-controls">
+            <div class="quick-bet-buttons">
+                <button class="bet-amount" data-amount="50">50</button>
+                <button class="bet-amount" data-amount="500">500</button>
+                <button class="bet-amount" data-amount="1000">1K</button>
+                <button class="bet-amount" data-amount="5000">5K</button>
+            </div>
+            
+            <div class="custom-bet">
+                <input type="number" id="custom-bet-amount" placeholder="Custom amount">
+                <button id="place-bet-btn">BET</button>
+            </div>
+            
+            <div class="auto-bet">
+                <button id="auto-bet-btn">Auto</button>
+            </div>
+        </div>
+
+        <!-- Free Recharge -->
+        <div class="free-recharge">
+            <button id="free-rc-btn">Free 100,000 Diamonds</button>
+        </div>
+
+        <!-- History -->
+        <div class="history-container">
+            <h3 class="history-title">Recent Results</h3>
+            <div class="history-items" id="history-items">
+                <!-- History items will be inserted here by JavaScript -->
+            </div>
+        </div>
     </div>
 
-    <!-- Regular Animals Section -->
-    <div class="regular-animals">
-      <div class="animal-card" data-animal="dolphin" data-odds="10">
-        <div class="animal-icon">🐬</div>
-        <div class="animal-odds">1:10</div>
-      </div>
-      <!-- Other animals -->
-    </div>
-  </div>
+    <!-- SweetAlert for notifications -->
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
 
-  <!-- Betting Controls -->
-  <div class="bet-controls">
-    <div class="quick-bet-buttons">
-      <button class="bet-amount" data-amount="50">50</button>
-      <button class="bet-amount" data-amount="500">500</button>
-      <button class="bet-amount" data-amount="1000">1K</button>
-      <button class="bet-amount" data-amount="5000">5K</button>
-    </div>
-    
-    <div class="custom-bet">
-      <input type="number" id="custom-bet-amount" placeholder="Custom amount">
-      <button id="place-bet-btn">BET</button>
-    </div>
-    
-    <div class="auto-bet">
-      <button id="auto-bet-btn">Auto</button>
-    </div>
-  </div>
+    <script>
+        // Game State
+        const gameState = {
+            currentRound: 1,
+            timeRemaining: 30,
+            isBettingOpen: true,
+            selectedAnimals: [],
+            userDiamonds: 1, // Start with 1 to force first recharge
+            todayChange: 0,
+            currentBets: [],
+            history: []
+        };
 
-  <!-- Free Recharge -->
-  <div class="free-recharge">
-    <button id="free-rc-btn">Free 100,000 Diamonds</button>
-  </div>
-  </div>
+        // Animals Data
+        const animals = [
+            { emoji: "🐰", name: "rabbit", payout: 5, isHot: true },
+            { emoji: "🙀", name: "cat", payout: 5, isHot: true },
+            { emoji: "🐶", name: "dog", payout: 5, isHot: true },
+            { emoji: "🐑", name: "sheep", payout: 5, isHot: true },
+            { emoji: "🐬", name: "dolphin", payout: 10, isHot: false },
+            { emoji: "🐼", name: "panda", payout: 15, isHot: false },
+            { emoji: "🦅", name: "eagle", payout: 25, isHot: false },
+            { emoji: "🦁", name: "lion", payout: 45, isHot: false }
+        ];
+
+        // Constants
+        const FREE_RECHARGE_AMOUNT = 100000;
+
+        // DOM Elements
+        const hotAnimalsRow = document.getElementById('hot-animals-row');
+        const regularAnimalsRow = document.getElementById('regular-animals-row');
+        const countdownElement = document.getElementById('countdown');
+        const remainingDiamondsElement = document.getElementById('remaining-diamonds');
+        const todayChangeElement = document.getElementById('today-change');
+        const customBetAmountInput = document.getElementById('custom-bet-amount');
+        const historyItemsContainer = document.getElementById('history-items');
+
+        // Initialize Game
+        function initGame() {
+            renderAnimalCards();
+            startRoundTimer();
+            updateUI();
+            
+            // Event Listeners
+            document.getElementById('free-rc-btn').addEventListener('click', handleFreeRecharge);
+            document.getElementById('place-bet-btn').addEventListener('click', handlePlaceBet);
+            document.getElementById('auto-bet-btn').addEventListener('click', handleAutoBet);
+            
+            // Quick bet buttons
+            document.querySelectorAll('.bet-amount').forEach(btn => {
+                btn.addEventListener('click', function() {
+                    customBetAmountInput.value = this.dataset.amount;
+                });
+            });
+        }
+
+        // Render Animal Cards
+        function renderAnimalCards() {
+            hotAnimalsRow.innerHTML = '';
+            regularAnimalsRow.innerHTML = '';
+            
+            animals.forEach(animal => {
+                const card = document.createElement('div');
+                card.className = `animal-card ${animal.isHot ? 'hot' : ''}`;
+                card.dataset.animal = animal.name;
+                
+                card.innerHTML = `
+                    <div class="animal-icon">${animal.emoji}</div>
+                    <div class="animal-odds">1:${animal.payout}</div>
+                `;
+                
+                card.addEventListener('click', () => selectAnimal(animal.name));
+                
+                if (animal.isHot) {
+                    hotAnimalsRow.appendChild(card);
+                } else {
+                    regularAnimalsRow.appendChild(card);
+                }
+            });
+        }
+
+        // Select Animal
+        function selectAnimal(animalName) {
+            if (!gameState.isBettingOpen) return;
+            
+            const cards = document.querySelectorAll('.animal-card');
+            cards.forEach(card => {
+                if (card.dataset.animal === animalName) {
+                    card.classList.toggle('selected');
+                } else {
+                    card.classList.remove('selected');
+                }
+            });
+        }
+
+        // Start Round Timer
+        function startRoundTimer() {
+            clearInterval(gameState.timer);
+            gameState.timeRemaining = 30;
+            countdownElement.textContent = gameState.timeRemaining;
+            
+            gameState.timer = setInterval(() => {
+                gameState.timeRemaining--;
+                countdownElement.textContent = gameState.timeRemaining;
+                
+                if (gameState.timeRemaining <= 10) {
+                    countdownElement.classList.add('pulse');
+                }
+                
+                if (gameState.timeRemaining <= 0) {
+                    clearInterval(gameState.timer);
+                    endRound();
+                }
+            }, 1000);
+        }
+
+        // End Round
+        function endRound() {
+            gameState.isBettingOpen = false;
+            
+            // Select winning animals (random for demo)
+            const winningAnimal = animals[Math.floor(Math.random() * animals.length)];
+            gameState.selectedAnimals = [winningAnimal.name];
+            
+            // Process results
+            processResults();
+            
+            // Add to history
+            addToHistory(winningAnimal);
+            
+            // Start new round after delay
+            setTimeout(startNewRound, 5000);
+        }
+
+        // Process Results
+        function processResults() {
+            const selectedCard = document.querySelector(`.animal-card[data-animal="${gameState.selectedAnimals[0]}"]`);
+            if (selectedCard) {
+                selectedCard.classList.add('win-glow');
+            }
+            
+            // Check if user won
+            const winningBet = gameState.currentBets.find(bet => 
+                bet.animal === gameState.selectedAnimals[0]);
+            
+            if (winningBet) {
+                const animal = animals.find(a => a.name === winningBet.animal);
+                const winnings = winningBet.amount * animal.payout;
+                
+                gameState.userDiamonds += winnings;
+                gameState.todayChange += winnings;
+                
+                Swal.fire({
+                    title: 'You Won!',
+                    text: `You won ${winnings.toLocaleString()} diamonds!`,
+                    icon: 'success'
+                });
+            }
+            
+            // Clear current bets
+            gameState.currentBets = [];
+            
+            // Update UI
+            updateUI();
+        }
+
+        // Start New Round
+        function startNewRound() {
+            gameState.currentRound++;
+            gameState.isBettingOpen = true;
+            gameState.selectedAnimals = [];
+            
+            // Reset UI
+            const cards = document.querySelectorAll('.animal-card');
+            cards.forEach(card => {
+                card.classList.remove('selected', 'win-glow');
+            });
+            
+            startRoundTimer();
+        }
+
+        // Place Bet
+        function handlePlaceBet() {
+            if (!gameState.isBettingOpen) {
+                Swal.fire('Error', 'Betting is closed for this round', 'error');
+                return;
+            }
+            
+            const amount = parseInt(customBetAmountInput.value);
+            if (isNaN(amount) || amount <= 0) {
+                Swal.fire('Error', 'Please enter a valid bet amount', 'error');
+                return;
+            }
+            
+            if (amount > gameState.userDiamonds) {
+                Swal.fire('Error', 'You don\'t have enough diamonds', 'error');
+                return;
+            }
+            
+            const selectedAnimalCard = document.querySelector('.animal-card.selected');
+            if (!selectedAnimalCard) {
+                Swal.fire('Error', 'Please select an animal', 'error');
+                return;
+            }
+            
+            const animalName = selectedAnimalCard.dataset.animal;
+            
+            // Deduct bet amount
+            gameState.userDiamonds -= amount;
+            gameState.todayChange -= amount;
+            
+            // Record bet
+            gameState.currentBets.push({
+                animal: animalName,
+                amount: amount
+            });
+            
+            // Update UI
+            updateUI();
+            
+            Swal.fire('Success', `Bet placed: ${amount} on ${animalName}`, 'success');
+        }
+
+        // Auto Bet (placeholder)
+        function handleAutoBet() {
+            Swal.fire('Info', 'Auto bet feature will be implemented soon', 'info');
+        }
+
+        // Free Recharge
+        function handleFreeRecharge() {
+            if (gameState.userDiamonds <= 0) {
+                gameState.userDiamonds = FREE_RECHARGE_AMOUNT;
+                updateUI();
+                
+                Swal.fire({
+                    title: 'Recharged!',
+                    text: `You received ${FREE_RECHARGE_AMOUNT.toLocaleString()} free diamonds!`,
+                    icon: 'success',
+                    confirmButtonText: 'Happy Hunting!'
+                });
+            } else {
+                Swal.fire({
+                    title: 'Not Available',
+                    text: 'You can only get free diamonds when your balance is zero',
+                    icon: 'info'
+                });
+            }
+        }
+
+        // Add to History
+        function addToHistory(animal) {
+            gameState.history.unshift(animal);
+            if (gameState.history.length > 10) {
+                gameState.history.pop();
+            }
+            
+            renderHistory();
+        }
+
+        // Render History
+        function renderHistory() {
+            historyItemsContainer.innerHTML = '';
+            
+            gameState.history.forEach((animal, index) => {
+                const item = document.createElement('div');
+                item.className = 'history-item';
+                item.innerHTML = `
+                    <div style="font-size: 1.5rem;">${animal.emoji}</div>
+                    <div>1:${animal.payout}</div>
+                `;
+                historyItemsContainer.appendChild(item);
+            });
+        }
+
+        // Update UI
+        function updateUI() {
+            remainingDiamondsElement.textContent = gameState.userDiamonds.toLocaleString();
+            
+            const todayChange = gameState.todayChange;
+            todayChangeElement.textContent = todayChange >= 0 ? 
+                `+${todayChange.toLocaleString()}` : 
+                `-${Math.abs(todayChange).toLocaleString()}`;
+            todayChangeElement.style.color = todayChange >= 0 ? '#4CAF50' : '#F44336';
+        }
+
+        // Initialize the game
+        window.onload = initGame;
+    </script>
+</body>
+</html>
