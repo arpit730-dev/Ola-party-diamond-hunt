@@ -120,10 +120,16 @@
         }
 
         /* Bet Amount Selector */
-        .amount-selector {
+        .bet-options {
             display: flex;
+            flex-direction: column;
             gap: 10px;
             margin-bottom: 15px;
+        }
+
+        .quick-bet-buttons {
+            display: flex;
+            gap: 10px;
             flex-wrap: wrap;
             justify-content: center;
         }
@@ -147,6 +153,30 @@
             background: #FFD700;
             color: #1A1A2E;
             font-weight: bold;
+        }
+
+        .custom-bet {
+            display: flex;
+            gap: 10px;
+            justify-content: center;
+        }
+
+        #custom-bet-input {
+            background: rgba(255,255,255,0.1);
+            border: 1px solid #64FFDA;
+            color: white;
+            padding: 8px 12px;
+            border-radius: 5px;
+            width: 120px;
+        }
+
+        #set-custom-bet {
+            background: linear-gradient(to right, #4A148C, #7B1FA2);
+            color: white;
+            border: none;
+            padding: 8px 12px;
+            border-radius: 5px;
+            cursor: pointer;
         }
 
         /* Free Recharge */
@@ -248,7 +278,7 @@
         <div class="user-stats">
             <div class="stat-box">
                 <span class="stat-label">Remaining</span>
-                <span class="stat-value" id="remaining-diamonds">0</span>
+                <span class="stat-value" id="remaining-diamonds">1</span>
             </div>
             <div class="stat-box">
                 <span class="stat-label">Today</span>
@@ -266,12 +296,19 @@
         </div>
 
         <!-- Bet Amount Selector -->
-        <div class="amount-selector" id="amount-selector">
-            <button class="amount-option" data-amount="50">50</button>
-            <button class="amount-option" data-amount="100">100</button>
-            <button class="amount-option" data-amount="500">500</button>
-            <button class="amount-option" data-amount="1000">1K</button>
-            <button class="amount-option" data-amount="5000">5K</button>
+        <div class="bet-options">
+            <div class="quick-bet-buttons">
+                <button class="amount-option" data-amount="50">50</button>
+                <button class="amount-option" data-amount="100">100</button>
+                <button class="amount-option" data-amount="500">500</button>
+                <button class="amount-option" data-amount="1000">1K</button>
+                <button class="amount-option" data-amount="5000">5K</button>
+            </div>
+            
+            <div class="custom-bet">
+                <input type="number" id="custom-bet-input" placeholder="Custom amount">
+                <button id="set-custom-bet">Set</button>
+            </div>
         </div>
 
         <!-- Animal Selection Grid -->
@@ -311,7 +348,7 @@
             timeRemaining: 30,
             isBettingOpen: true,
             selectedAnimals: [],
-            userDiamonds: 0, // Start with 1 to force first recharge
+            userDiamonds: 1, // Start with 1 to force first recharge
             todayChange: 0,
             currentBets: [],
             history: [],
@@ -340,7 +377,7 @@
         const remainingDiamondsElement = document.getElementById('remaining-diamonds');
         const todayChangeElement = document.getElementById('today-change');
         const historyItemsContainer = document.getElementById('history-items');
-        const amountSelector = document.getElementById('amount-selector');
+        const customBetInput = document.getElementById('custom-bet-input');
 
         // Initialize Game
         function initGame() {
@@ -350,14 +387,31 @@
             
             // Event Listeners
             document.getElementById('free-rc-btn').addEventListener('click', handleFreeRecharge);
+            document.getElementById('set-custom-bet').addEventListener('click', setCustomBet);
             
             // Amount selection buttons
             document.querySelectorAll('.amount-option').forEach(btn => {
                 btn.addEventListener('click', function() {
-                    gameState.selectedAmount = parseInt(this.dataset.amount);
-                    updateAmountSelection();
+                    selectAmount(parseInt(this.dataset.amount));
                 });
             });
+        }
+
+        // Set custom bet amount
+        function setCustomBet() {
+            const amount = parseInt(customBetInput.value);
+            if (isNaN(amount) || amount <= 0) {
+                Swal.fire('Error', 'Please enter a valid bet amount', 'error');
+                return;
+            }
+            selectAmount(amount);
+        }
+
+        // Select bet amount
+        function selectAmount(amount) {
+            gameState.selectedAmount = amount;
+            updateAmountSelection();
+            Swal.fire('Success', `Bet amount set to ${amount}`, 'success');
         }
 
         // Update amount selection UI
@@ -369,6 +423,9 @@
                     btn.classList.remove('selected');
                 }
             });
+            
+            // Also update custom input field
+            customBetInput.value = gameState.selectedAmount > 0 ? gameState.selectedAmount : '';
         }
 
         // Render Animal Cards
@@ -397,7 +454,7 @@
             });
         }
 
-        // Place Bet
+        // Place Bet (Modified to accumulate bets)
         function placeBet(animalName) {
             if (!gameState.isBettingOpen) {
                 Swal.fire('Error', 'Betting is closed for this round', 'error');
@@ -414,14 +471,19 @@
                 return;
             }
             
-            // Remove any existing bet on this animal
-            gameState.currentBets = gameState.currentBets.filter(bet => bet.animal !== animalName);
+            // Check if bet already exists for this animal
+            const existingBetIndex = gameState.currentBets.findIndex(bet => bet.animal === animalName);
             
-            // Add new bet
-            gameState.currentBets.push({
-                animal: animalName,
-                amount: gameState.selectedAmount
-            });
+            if (existingBetIndex >= 0) {
+                // Add to existing bet
+                gameState.currentBets[existingBetIndex].amount += gameState.selectedAmount;
+            } else {
+                // Add new bet
+                gameState.currentBets.push({
+                    animal: animalName,
+                    amount: gameState.selectedAmount
+                });
+            }
             
             // Deduct bet amount
             gameState.userDiamonds -= gameState.selectedAmount;
