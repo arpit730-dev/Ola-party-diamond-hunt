@@ -342,33 +342,36 @@
     <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
 
     <script>
-        // Game State
+        // Game State with localStorage persistence
         const gameState = {
-            currentRound: 1,
+            currentRound: localStorage.getItem('currentRound') ? parseInt(localStorage.getItem('currentRound')) : 1,
             timeRemaining: 30,
             isBettingOpen: true,
             selectedAnimals: [],
-            userDiamonds: 0, // Start with 0 to force first recharge
-            todayChange: 0,
-            currentBets: [],
-            history: [],
-            selectedAmount: 0
+            userDiamonds: localStorage.getItem('userDiamonds') ? parseInt(localStorage.getItem('userDiamonds')) : 0,
+            todayChange: localStorage.getItem('todayChange') ? parseInt(localStorage.getItem('todayChange')) : 0,
+            currentBets: localStorage.getItem('currentBets') ? JSON.parse(localStorage.getItem('currentBets')) : [],
+            history: localStorage.getItem('history') ? JSON.parse(localStorage.getItem('history')) : [],
+            selectedAmount: localStorage.getItem('selectedAmount') ? parseInt(localStorage.getItem('selectedAmount')) : 0,
+            lastRoundTime: localStorage.getItem('lastRoundTime') ? parseInt(localStorage.getItem('lastRoundTime')) : Date.now(),
+            serverTimeOffset: 0
         };
 
-        // Animals Data
+        // Animals Data with weights for probability
         const animals = [
-            { emoji: "🐰", name: "rabbit", payout: 5, isHot: true },
-            { emoji: "🙀", name: "cat", payout: 5, isHot: true },
-            { emoji: "🐶", name: "dog", payout: 5, isHot: true },
-            { emoji: "🐑", name: "sheep", payout: 5, isHot: true },
-            { emoji: "🐬", name: "dolphin", payout: 10, isHot: false },
-            { emoji: "🐼", name: "panda", payout: 15, isHot: false },
-            { emoji: "🦅", name: "eagle", payout: 25, isHot: false },
-            { emoji: "🦁", name: "lion", payout: 45, isHot: false }
+            { emoji: "🐰", name: "rabbit", payout: 5, isHot: true, weight: 20 },
+            { emoji: "🙀", name: "cat", payout: 5, isHot: true, weight: 20 },
+            { emoji: "🐶", name: "dog", payout: 5, isHot: true, weight: 20 },
+            { emoji: "🐑", name: "sheep", payout: 5, isHot: true, weight: 20 },
+            { emoji: "🐬", name: "dolphin", payout: 10, isHot: false, weight: 15 },
+            { emoji: "🐼", name: "panda", payout: 15, isHot: false, weight: 10 },
+            { emoji: "🦅", name: "eagle", payout: 25, isHot: false, weight: 5 },
+            { emoji: "🦁", name: "lion", payout: 45, isHot: false, weight: 2 }
         ];
 
         // Constants
         const FREE_RECHARGE_AMOUNT = 100000;
+        const ROUND_DURATION = 30000; // 30 seconds in milliseconds
 
         // DOM Elements
         const hotAnimalsRow = document.getElementById('hot-animals-row');
@@ -379,17 +382,27 @@
         const historyItemsContainer = document.getElementById('history-items');
         const customBetInput = document.getElementById('custom-bet-input');
 
-        // Initialize Game
+        // Initialize Game with 24/7 functionality
         function initGame() {
+            // Initialize server time synchronization
+            initServerTime();
+            
             renderAnimalCards();
-            startRoundTimer();
             updateUI();
+            renderHistory();
+            updateAmountSelection();
+            updateBetDisplay();
+            
+            // Calculate how many rounds passed while away
+            calculateMissedRounds();
+            
+            // Start the round timer
+            startRoundTimer();
             
             // Event Listeners
             document.getElementById('free-rc-btn').addEventListener('click', handleFreeRecharge);
             document.getElementById('set-custom-bet').addEventListener('click', setCustomBet);
             
-            // Amount selection buttons
             document.querySelectorAll('.amount-option').forEach(btn => {
                 btn.addEventListener('click', function() {
                     selectAmount(parseInt(this.dataset.amount));
@@ -397,35 +410,64 @@
             });
         }
 
-        // Set custom bet amount
-        function setCustomBet() {
-            const amount = parseInt(customBetInput.value);
-            if (isNaN(amount) || amount <= 0) {
-                Swal.fire('Error', 'Please enter a valid bet amount', 'error');
-                return;
+        // Initialize server time (simulated with localStorage)
+        function initServerTime() {
+            if (!localStorage.getItem('serverTime')) {
+                localStorage.setItem('serverTime', Date.now().toString());
+                localStorage.setItem('lastRoundTime', Date.now().toString());
             }
-            selectAmount(amount);
+            gameState.serverTimeOffset = Date.now() - parseInt(localStorage.getItem('serverTime'));
         }
 
-        // Select bet amount
-        function selectAmount(amount) {
-            gameState.selectedAmount = amount;
-            updateAmountSelection();
-            Swal.fire('Success', `Bet amount set to ${amount}`, 'success');
-        }
-
-        // Update amount selection UI
-        function updateAmountSelection() {
-            document.querySelectorAll('.amount-option').forEach(btn => {
-                if (parseInt(btn.dataset.amount) === gameState.selectedAmount) {
-                    btn.classList.add('selected');
-                } else {
-                    btn.classList.remove('selected');
-                }
-            });
+        // Calculate missed rounds while browser was closed
+        function calculateMissedRounds() {
+            const now = Date.now() - gameState.serverTimeOffset;
+            const lastRoundTime = parseInt(localStorage.getItem('lastRoundTime')) || now;
+            const roundsMissed = Math.floor((now - lastRoundTime) / ROUND_DURATION);
             
-            // Also update custom input field
-            customBetInput.value = gameState.selectedAmount > 0 ? gameState.selectedAmount : '';
+            if (roundsMissed > 0) {
+                // Process missed rounds
+                for (let i = 0; i < roundsMissed; i++) {
+                    processMissedRound();
+                }
+                
+                // Update last round time
+                const newRoundTime = lastRoundTime + (roundsMissed * ROUND_DURATION);
+                localStorage.setItem('lastRoundTime', newRoundTime.toString());
+                
+                // Save game state
+                saveGameState();
+                updateUI();
+            }
+        }
+
+        // Process a round that happened while user was away
+        function processMissedRound() {
+            gameState.currentRound++;
+            
+            // Get the winning animal from shared history or generate new one
+            const history = JSON.parse(localStorage.getItem('history')) || [];
+            const winningAnimal = history.length > 0 ? 
+                animals.find(a => a.name === history[0].name) : 
+                selectWinningAnimal();
+            
+            // Check if user had any bets in localStorage
+            const savedBets = JSON.parse(localStorage.getItem('currentBets')) || [];
+            const winningBet = savedBets.find(bet => bet.animal === winningAnimal.name);
+            
+            if (winningBet) {
+                const winnings = winningBet.amount * winningAnimal.payout;
+                gameState.userDiamonds += winnings;
+                gameState.todayChange += winnings;
+                
+                // Add to history if this was a new round (not from shared history)
+                if (history.length === 0) {
+                    addToHistory(winningAnimal);
+                }
+            }
+            
+            // Clear bets after processing
+            gameState.currentBets = [];
         }
 
         // Render Animal Cards
@@ -454,7 +496,7 @@
             });
         }
 
-        // Place Bet (Modified to accumulate bets)
+        // Place Bet
         function placeBet(animalName) {
             if (!gameState.isBettingOpen) {
                 Swal.fire('Error', 'Betting is closed for this round', 'error');
@@ -492,6 +534,7 @@
             // Update bet display
             updateBetDisplay();
             updateUI();
+            saveGameState();
             
             // Visual feedback
             const card = document.querySelector(`.animal-card[data-animal="${animalName}"]`);
@@ -515,10 +558,16 @@
             });
         }
 
-        // Start Round Timer
+        // Start Round Timer with synchronized timing
         function startRoundTimer() {
             clearInterval(gameState.timer);
-            gameState.timeRemaining = 30;
+            
+            // Calculate time until next round based on server time
+            const now = Date.now() - gameState.serverTimeOffset;
+            const lastRoundTime = parseInt(localStorage.getItem('lastRoundTime')) || now;
+            const timeSinceLastRound = (now - lastRoundTime) % ROUND_DURATION;
+            gameState.timeRemaining = Math.floor((ROUND_DURATION - timeSinceLastRound) / 1000);
+            
             countdownElement.textContent = gameState.timeRemaining;
             
             gameState.timer = setInterval(() => {
@@ -536,12 +585,28 @@
             }, 1000);
         }
 
-        // End Round
+        // Select winning animal with weighted probability
+        function selectWinningAnimal() {
+            const totalWeight = animals.reduce((sum, animal) => sum + animal.weight, 0);
+            let random = Math.random() * totalWeight;
+            let weightSum = 0;
+            
+            for (const animal of animals) {
+                weightSum += animal.weight;
+                if (random <= weightSum) {
+                    return animal;
+                }
+            }
+            
+            return animals[0]; // fallback
+        }
+
+        // End Round (synchronized across all users)
         function endRound() {
             gameState.isBettingOpen = false;
             
-            // Select winning animals (random for demo)
-            const winningAnimal = animals[Math.floor(Math.random() * animals.length)];
+            // Select winning animal with probability weights
+            const winningAnimal = selectWinningAnimal();
             gameState.selectedAnimals = [winningAnimal.name];
             
             // Process results
@@ -549,6 +614,13 @@
             
             // Add to history
             addToHistory(winningAnimal);
+            
+            // Update last round time in localStorage (shared across all users)
+            const now = Date.now() - gameState.serverTimeOffset;
+            localStorage.setItem('lastRoundTime', now.toString());
+            
+            // Save game state
+            saveGameState();
             
             // Start new round after delay
             setTimeout(startNewRound, 5000);
@@ -592,6 +664,7 @@
             gameState.currentRound++;
             gameState.isBettingOpen = true;
             gameState.selectedAnimals = [];
+            gameState.timeRemaining = Math.floor(ROUND_DURATION / 1000);
             
             // Reset UI
             const cards = document.querySelectorAll('.animal-card');
@@ -599,13 +672,49 @@
                 card.classList.remove('selected', 'win-glow');
             });
             
+            // Save game state
+            saveGameState();
+            
             startRoundTimer();
+        }
+
+        // Set custom bet amount
+        function setCustomBet() {
+            const amount = parseInt(customBetInput.value);
+            if (isNaN(amount) || amount <= 0) {
+                Swal.fire('Error', 'Please enter a valid bet amount', 'error');
+                return;
+            }
+            selectAmount(amount);
+        }
+
+        // Select bet amount
+        function selectAmount(amount) {
+            gameState.selectedAmount = amount;
+            updateAmountSelection();
+            saveGameState();
+            Swal.fire('Success', `Bet amount set to ${amount}`, 'success');
+        }
+
+        // Update amount selection UI
+        function updateAmountSelection() {
+            document.querySelectorAll('.amount-option').forEach(btn => {
+                if (parseInt(btn.dataset.amount) === gameState.selectedAmount) {
+                    btn.classList.add('selected');
+                } else {
+                    btn.classList.remove('selected');
+                }
+            });
+            
+            // Also update custom input field
+            customBetInput.value = gameState.selectedAmount > 0 ? gameState.selectedAmount : '';
         }
 
         // Free Recharge
         function handleFreeRecharge() {
             if (gameState.userDiamonds <= 0) {
                 gameState.userDiamonds = FREE_RECHARGE_AMOUNT;
+                saveGameState();
                 updateUI();
                 
                 Swal.fire({
@@ -629,6 +738,9 @@
             if (gameState.history.length > 10) {
                 gameState.history.pop();
             }
+            
+            // Save to localStorage for sharing across users
+            localStorage.setItem('history', JSON.stringify(gameState.history));
             
             renderHistory();
         }
@@ -659,27 +771,17 @@
             todayChangeElement.style.color = todayChange >= 0 ? '#4CAF50' : '#F44336';
         }
 
+        // Save game state to localStorage
+        function saveGameState() {
+            localStorage.setItem('currentRound', gameState.currentRound.toString());
+            localStorage.setItem('userDiamonds', gameState.userDiamonds.toString());
+            localStorage.setItem('todayChange', gameState.todayChange.toString());
+            localStorage.setItem('currentBets', JSON.stringify(gameState.currentBets));
+            localStorage.setItem('selectedAmount', gameState.selectedAmount.toString());
+        }
+
         // Initialize the game
         window.onload = initGame;
-        // Handle successful login/signup
-    function handleAuthSuccess() {
-        // Redirect to game.html after successful authentication
-        window.location.href = "game.html";
-        
-        // Or alternatively, you can show the game container if using single page:
-        // document.getElementById('auth-container').style.display = 'none';
-        // document.getElementById('game-container').style.display = 'block';
-        // initGame(); // Initialize your game
-    }
-
-    // In your auth success handlers, replace the redirect with:
-    auth.signInWithEmailAndPassword(email, password)
-        .then(handleAuthSuccess)
-        .catch(showError);
-        
-    auth.createUserWithEmailAndPassword(email, password)
-        .then(handleAuthSuccess)
-        .catch(showError);
     </script>
 </body>
 </html>
