@@ -1,0 +1,39 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Diamond Hunt - Login</title>
+    <style>
+        /* [Use the same login page styles from earlier] */
+    </style>
+</head>
+<body>
+    <div class="auth-container">
+        <!-- [Your login form HTML from earlier] -->
+    </div>
+
+    <script>
+        // Firebase configuration (same as in game.html)
+        const firebaseConfig = {
+            apiKey: "YOUR_API_KEY",
+            authDomain: "YOUR_AUTH_DOMAIN",
+            projectId: "YOUR_PROJECT_ID",
+            storageBucket: "YOUR_STORAGE_BUCKET",
+            messagingSenderId: "YOUR_SENDER_ID",
+            appId: "YOUR_APP_ID"
+        };
+
+        // Initialize Firebase
+        firebase.initializeApp(firebaseConfig);
+        const auth = firebase.auth();
+
+        // Handle successful login/signup
+        function handleAuthSuccess() {
+            window.location.href = "game.html"; // Redirect to game page
+        }
+
+        // [Rest of your login page JavaScript]
+    </script>
+</body>
+</html>
