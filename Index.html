@@ -1,0 +1,685 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>OLA Party Diamond Hunt</title>
+    <style>
+        /* Base Styles */
+        body {
+            background: linear-gradient(135deg, #1A1A2E 0%, #16213E 100%);
+            color: white;
+            font-family: 'Poppins', sans-serif;
+            margin: 0;
+            padding: 10px;
+        }
+
+        .game-container {
+            max-width: 800px;
+            margin: 0 auto;
+        }
+
+        /* User Stats */
+        .user-stats {
+            display: flex;
+            justify-content: space-around;
+            background: rgba(0,0,0,0.3);
+            padding: 10px;
+            border-radius: 10px;
+            margin-bottom: 15px;
+        }
+
+        .stat-box {
+            text-align: center;
+        }
+
+        .stat-label {
+            display: block;
+            font-size: 0.8rem;
+            color: #aaa;
+        }
+
+        .stat-value {
+            font-size: 1.2rem;
+            font-weight: bold;
+            color: #FFD700;
+        }
+
+        /* Round Timer */
+        .round-timer {
+            background: rgba(10, 36, 99, 0.5);
+            padding: 10px;
+            border-radius: 8px;
+            margin-bottom: 15px;
+            text-align: center;
+        }
+
+        #countdown {
+            color: #FFD700;
+            font-weight: bold;
+            font-size: 1.2em;
+        }
+
+        /* Animal Cards */
+        .animal-rows {
+            display: flex;
+            flex-direction: column;
+            gap: 15px;
+            margin-bottom: 20px;
+        }
+
+        .animal-row {
+            display: flex;
+            gap: 10px;
+            justify-content: center;
+            flex-wrap: wrap;
+        }
+
+        .animal-card {
+            background: rgba(26, 26, 46, 0.7);
+            border-radius: 12px;
+            padding: 10px;
+            text-align: center;
+            transition: all 0.3s ease;
+            border: 2px solid transparent;
+            cursor: pointer;
+            min-width: 80px;
+            position: relative;
+        }
+
+        .animal-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 10px 20px rgba(0,0,0,0.2);
+        }
+
+        .animal-card.selected {
+            border: 2px solid #FFD700;
+            background: rgba(255, 215, 0, 0.1);
+        }
+
+        .animal-card.hot {
+            border: 2px solid #FF5252;
+            background: rgba(255, 82, 82, 0.1);
+        }
+
+        .animal-icon {
+            font-size: 2.5rem;
+            margin-bottom: 5px;
+        }
+
+        .animal-odds {
+            font-weight: bold;
+            font-size: 0.9rem;
+            margin-bottom: 5px;
+        }
+
+        .animal-bet {
+            font-size: 0.8rem;
+            color: #FFD700;
+            margin-top: 5px;
+        }
+
+        /* Bet Amount Selector */
+        .bet-options {
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+            margin-bottom: 15px;
+        }
+
+        .quick-bet-buttons {
+            display: flex;
+            gap: 10px;
+            flex-wrap: wrap;
+            justify-content: center;
+        }
+
+        .amount-option {
+            background: #4A148C;
+            color: white;
+            border: none;
+            padding: 8px 12px;
+            border-radius: 5px;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+
+        .amount-option:hover {
+            background: #7B1FA2;
+            transform: scale(1.05);
+        }
+
+        .amount-option.selected {
+            background: #FFD700;
+            color: #1A1A2E;
+            font-weight: bold;
+        }
+
+        .custom-bet {
+            display: flex;
+            gap: 10px;
+            justify-content: center;
+        }
+
+        #custom-bet-input {
+            background: rgba(255,255,255,0.1);
+            border: 1px solid #64FFDA;
+            color: white;
+            padding: 8px 12px;
+            border-radius: 5px;
+            width: 120px;
+        }
+
+        #set-custom-bet {
+            background: linear-gradient(to right, #4A148C, #7B1FA2);
+            color: white;
+            border: none;
+            padding: 8px 12px;
+            border-radius: 5px;
+            cursor: pointer;
+        }
+
+        /* Free Recharge */
+        .free-recharge {
+            margin-top: 20px;
+            text-align: center;
+        }
+
+        #free-rc-btn {
+            background: linear-gradient(to right, #00C853, #64DD17);
+            color: white;
+            border: none;
+            padding: 12px 25px;
+            border-radius: 25px;
+            font-size: 1rem;
+            font-weight: bold;
+            cursor: pointer;
+            box-shadow: 0 4px 15px rgba(0, 200, 83, 0.3);
+            transition: all 0.3s;
+        }
+
+        #free-rc-btn:hover {
+            transform: scale(1.05);
+            box-shadow: 0 6px 20px rgba(0, 200, 83, 0.4);
+        }
+
+        /* History */
+        .history-container {
+            margin-top: 30px;
+            background: rgba(0,0,0,0.3);
+            padding: 15px;
+            border-radius: 10px;
+        }
+
+        .history-title {
+            margin-top: 0;
+            margin-bottom: 10px;
+            text-align: center;
+        }
+
+        .history-items {
+            display: flex;
+            gap: 10px;
+            overflow-x: auto;
+            padding-bottom: 10px;
+            justify-content: center;
+        }
+
+        .history-item {
+            min-width: 50px;
+            text-align: center;
+            background: rgba(255,255,255,0.1);
+            padding: 8px;
+            border-radius: 8px;
+        }
+
+        /* Animations */
+        @keyframes pulse {
+            0% { transform: scale(1); }
+            50% { transform: scale(1.05); }
+            100% { transform: scale(1); }
+        }
+
+        .pulse {
+            animation: pulse 1s infinite;
+        }
+
+        @keyframes winGlow {
+            0% { box-shadow: 0 0 5px #FFD700; }
+            50% { box-shadow: 0 0 20px #FFD700; }
+            100% { box-shadow: 0 0 5px #FFD700; }
+        }
+
+        .win-glow {
+            animation: winGlow 2s infinite;
+        }
+
+        /* Responsive */
+        @media (max-width: 500px) {
+            .animal-card {
+                min-width: calc(33% - 20px);
+                padding: 8px 5px;
+            }
+            
+            .animal-icon {
+                font-size: 2rem;
+            }
+            
+            .amount-option {
+                padding: 6px 10px;
+                font-size: 0.9rem;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="game-container">
+        <!-- User Stats Header -->
+        <div class="user-stats">
+            <div class="stat-box">
+                <span class="stat-label">Remaining</span>
+                <span class="stat-value" id="remaining-diamonds">0</span>
+            </div>
+            <div class="stat-box">
+                <span class="stat-label">Today</span>
+                <span class="stat-value" id="today-change">+0</span>
+            </div>
+            <div class="stat-box">
+                <span class="stat-label">Lv</span>
+                <span class="stat-value">13</span>
+            </div>
+        </div>
+
+        <!-- Round Timer -->
+        <div class="round-timer">
+            <h3>Next Round Starts In: <span id="countdown">30</span>s</h3>
+        </div>
+
+        <!-- Bet Amount Selector -->
+        <div class="bet-options">
+            <div class="quick-bet-buttons">
+                <button class="amount-option" data-amount="50">50</button>
+                <button class="amount-option" data-amount="100">100</button>
+                <button class="amount-option" data-amount="500">500</button>
+                <button class="amount-option" data-amount="1000">1K</button>
+                <button class="amount-option" data-amount="5000">5K</button>
+            </div>
+            
+            <div class="custom-bet">
+                <input type="number" id="custom-bet-input" placeholder="Custom amount">
+                <button id="set-custom-bet">Set</button>
+            </div>
+        </div>
+
+        <!-- Animal Selection Grid -->
+        <div class="animal-rows" id="animal-rows">
+            <!-- First Row (1:5 animals) -->
+            <div class="animal-row" id="hot-animals-row">
+                <!-- Hot animals (1:5) will be inserted here -->
+            </div>
+            
+            <!-- Second Row (other animals) -->
+            <div class="animal-row" id="regular-animals-row">
+                <!-- Other animals will be inserted here -->
+            </div>
+        </div>
+
+        <!-- Free Recharge -->
+        <div class="free-recharge">
+            <button id="free-rc-btn">Free 100,000 Diamonds</button>
+        </div>
+
+        <!-- History -->
+        <div class="history-container">
+            <h3 class="history-title">Recent Results</h3>
+            <div class="history-items" id="history-items">
+                <!-- History items will be inserted here by JavaScript -->
+            </div>
+        </div>
+    </div>
+
+    <!-- SweetAlert for notifications -->
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+
+    <script>
+        // Game State
+        const gameState = {
+            currentRound: 1,
+            timeRemaining: 30,
+            isBettingOpen: true,
+            selectedAnimals: [],
+            userDiamonds: 0, // Start with 0 to force first recharge
+            todayChange: 0,
+            currentBets: [],
+            history: [],
+            selectedAmount: 0
+        };
+
+        // Animals Data
+        const animals = [
+            { emoji: "🐰", name: "rabbit", payout: 5, isHot: true },
+            { emoji: "🙀", name: "cat", payout: 5, isHot: true },
+            { emoji: "🐶", name: "dog", payout: 5, isHot: true },
+            { emoji: "🐑", name: "sheep", payout: 5, isHot: true },
+            { emoji: "🐬", name: "dolphin", payout: 10, isHot: false },
+            { emoji: "🐼", name: "panda", payout: 15, isHot: false },
+            { emoji: "🦅", name: "eagle", payout: 25, isHot: false },
+            { emoji: "🦁", name: "lion", payout: 45, isHot: false }
+        ];
+
+        // Constants
+        const FREE_RECHARGE_AMOUNT = 100000;
+
+        // DOM Elements
+        const hotAnimalsRow = document.getElementById('hot-animals-row');
+        const regularAnimalsRow = document.getElementById('regular-animals-row');
+        const countdownElement = document.getElementById('countdown');
+        const remainingDiamondsElement = document.getElementById('remaining-diamonds');
+        const todayChangeElement = document.getElementById('today-change');
+        const historyItemsContainer = document.getElementById('history-items');
+        const customBetInput = document.getElementById('custom-bet-input');
+
+        // Initialize Game
+        function initGame() {
+            renderAnimalCards();
+            startRoundTimer();
+            updateUI();
+            
+            // Event Listeners
+            document.getElementById('free-rc-btn').addEventListener('click', handleFreeRecharge);
+            document.getElementById('set-custom-bet').addEventListener('click', setCustomBet);
+            
+            // Amount selection buttons
+            document.querySelectorAll('.amount-option').forEach(btn => {
+                btn.addEventListener('click', function() {
+                    selectAmount(parseInt(this.dataset.amount));
+                });
+            });
+        }
+
+        // Set custom bet amount
+        function setCustomBet() {
+            const amount = parseInt(customBetInput.value);
+            if (isNaN(amount) || amount <= 0) {
+                Swal.fire('Error', 'Please enter a valid bet amount', 'error');
+                return;
+            }
+            selectAmount(amount);
+        }
+
+        // Select bet amount
+        function selectAmount(amount) {
+            gameState.selectedAmount = amount;
+            updateAmountSelection();
+            Swal.fire('Success', `Bet amount set to ${amount}`, 'success');
+        }
+
+        // Update amount selection UI
+        function updateAmountSelection() {
+            document.querySelectorAll('.amount-option').forEach(btn => {
+                if (parseInt(btn.dataset.amount) === gameState.selectedAmount) {
+                    btn.classList.add('selected');
+                } else {
+                    btn.classList.remove('selected');
+                }
+            });
+            
+            // Also update custom input field
+            customBetInput.value = gameState.selectedAmount > 0 ? gameState.selectedAmount : '';
+        }
+
+        // Render Animal Cards
+        function renderAnimalCards() {
+            hotAnimalsRow.innerHTML = '';
+            regularAnimalsRow.innerHTML = '';
+            
+            animals.forEach(animal => {
+                const card = document.createElement('div');
+                card.className = `animal-card ${animal.isHot ? 'hot' : ''}`;
+                card.dataset.animal = animal.name;
+                
+                card.innerHTML = `
+                    <div class="animal-icon">${animal.emoji}</div>
+                    <div class="animal-odds">1:${animal.payout}</div>
+                    <div class="animal-bet" id="bet-${animal.name}"></div>
+                `;
+                
+                card.addEventListener('click', () => placeBet(animal.name));
+                
+                if (animal.isHot) {
+                    hotAnimalsRow.appendChild(card);
+                } else {
+                    regularAnimalsRow.appendChild(card);
+                }
+            });
+        }
+
+        // Place Bet (Modified to accumulate bets)
+        function placeBet(animalName) {
+            if (!gameState.isBettingOpen) {
+                Swal.fire('Error', 'Betting is closed for this round', 'error');
+                return;
+            }
+            
+            if (gameState.selectedAmount <= 0) {
+                Swal.fire('Error', 'Please select a bet amount first', 'error');
+                return;
+            }
+            
+            if (gameState.selectedAmount > gameState.userDiamonds) {
+                Swal.fire('Error', 'You don\'t have enough diamonds', 'error');
+                return;
+            }
+            
+            // Check if bet already exists for this animal
+            const existingBetIndex = gameState.currentBets.findIndex(bet => bet.animal === animalName);
+            
+            if (existingBetIndex >= 0) {
+                // Add to existing bet
+                gameState.currentBets[existingBetIndex].amount += gameState.selectedAmount;
+            } else {
+                // Add new bet
+                gameState.currentBets.push({
+                    animal: animalName,
+                    amount: gameState.selectedAmount
+                });
+            }
+            
+            // Deduct bet amount
+            gameState.userDiamonds -= gameState.selectedAmount;
+            gameState.todayChange -= gameState.selectedAmount;
+            
+            // Update bet display
+            updateBetDisplay();
+            updateUI();
+            
+            // Visual feedback
+            const card = document.querySelector(`.animal-card[data-animal="${animalName}"]`);
+            if (card) {
+                card.classList.add('selected');
+                setTimeout(() => card.classList.remove('selected'), 300);
+            }
+        }
+
+        // Update bet display on animals
+        function updateBetDisplay() {
+            animals.forEach(animal => {
+                const betElement = document.getElementById(`bet-${animal.name}`);
+                const bet = gameState.currentBets.find(b => b.animal === animal.name);
+                
+                if (bet) {
+                    betElement.textContent = `${bet.amount}`;
+                } else {
+                    betElement.textContent = '';
+                }
+            });
+        }
+
+        // Start Round Timer
+        function startRoundTimer() {
+            clearInterval(gameState.timer);
+            gameState.timeRemaining = 30;
+            countdownElement.textContent = gameState.timeRemaining;
+            
+            gameState.timer = setInterval(() => {
+                gameState.timeRemaining--;
+                countdownElement.textContent = gameState.timeRemaining;
+                
+                if (gameState.timeRemaining <= 10) {
+                    countdownElement.classList.add('pulse');
+                }
+                
+                if (gameState.timeRemaining <= 0) {
+                    clearInterval(gameState.timer);
+                    endRound();
+                }
+            }, 1000);
+        }
+
+        // End Round
+        function endRound() {
+            gameState.isBettingOpen = false;
+            
+            // Select winning animals (random for demo)
+            const winningAnimal = animals[Math.floor(Math.random() * animals.length)];
+            gameState.selectedAnimals = [winningAnimal.name];
+            
+            // Process results
+            processResults();
+            
+            // Add to history
+            addToHistory(winningAnimal);
+            
+            // Start new round after delay
+            setTimeout(startNewRound, 5000);
+        }
+
+        // Process Results
+        function processResults() {
+            const selectedCard = document.querySelector(`.animal-card[data-animal="${gameState.selectedAnimals[0]}"]`);
+            if (selectedCard) {
+                selectedCard.classList.add('win-glow');
+            }
+            
+            // Check if user won
+            const winningBet = gameState.currentBets.find(bet => 
+                bet.animal === gameState.selectedAnimals[0]);
+            
+            if (winningBet) {
+                const animal = animals.find(a => a.name === winningBet.animal);
+                const winnings = winningBet.amount * animal.payout;
+                
+                gameState.userDiamonds += winnings;
+                gameState.todayChange += winnings;
+                
+                Swal.fire({
+                    title: 'You Won!',
+                    text: `You won ${winnings.toLocaleString()} diamonds!`,
+                    icon: 'success'
+                });
+            }
+            
+            // Clear current bets
+            gameState.currentBets = [];
+            updateBetDisplay();
+            
+            // Update UI
+            updateUI();
+        }
+
+        // Start New Round
+        function startNewRound() {
+            gameState.currentRound++;
+            gameState.isBettingOpen = true;
+            gameState.selectedAnimals = [];
+            
+            // Reset UI
+            const cards = document.querySelectorAll('.animal-card');
+            cards.forEach(card => {
+                card.classList.remove('selected', 'win-glow');
+            });
+            
+            startRoundTimer();
+        }
+
+        // Free Recharge
+        function handleFreeRecharge() {
+            if (gameState.userDiamonds <= 0) {
+                gameState.userDiamonds = FREE_RECHARGE_AMOUNT;
+                updateUI();
+                
+                Swal.fire({
+                    title: 'Recharged!',
+                    text: `You received ${FREE_RECHARGE_AMOUNT.toLocaleString()} free diamonds!`,
+                    icon: 'success',
+                    confirmButtonText: 'Happy Hunting!'
+                });
+            } else {
+                Swal.fire({
+                    title: 'Not Available',
+                    text: 'You can only get free diamonds when your balance is zero',
+                    icon: 'info'
+                });
+            }
+        }
+
+        // Add to History
+        function addToHistory(animal) {
+            gameState.history.unshift(animal);
+            if (gameState.history.length > 10) {
+                gameState.history.pop();
+            }
+            
+            renderHistory();
+        }
+
+        // Render History
+        function renderHistory() {
+            historyItemsContainer.innerHTML = '';
+            
+            gameState.history.forEach((animal, index) => {
+                const item = document.createElement('div');
+                item.className = 'history-item';
+                item.innerHTML = `
+                    <div style="font-size: 1.5rem;">${animal.emoji}</div>
+                    <div>1:${animal.payout}</div>
+                `;
+                historyItemsContainer.appendChild(item);
+            });
+        }
+
+        // Update UI
+        function updateUI() {
+            remainingDiamondsElement.textContent = gameState.userDiamonds.toLocaleString();
+            
+            const todayChange = gameState.todayChange;
+            todayChangeElement.textContent = todayChange >= 0 ? 
+                `+${todayChange.toLocaleString()}` : 
+                `-${Math.abs(todayChange).toLocaleString()}`;
+            todayChangeElement.style.color = todayChange >= 0 ? '#4CAF50' : '#F44336';
+        }
+
+        // Initialize the game
+        window.onload = initGame;
+        // Handle successful login/signup
+    function handleAuthSuccess() {
+        // Redirect to game.html after successful authentication
+        window.location.href = "game.html";
+        
+        // Or alternatively, you can show the game container if using single page:
+        // document.getElementById('auth-container').style.display = 'none';
+        // document.getElementById('game-container').style.display = 'block';
+        // initGame(); // Initialize your game
+    }
+
+    // In your auth success handlers, replace the redirect with:
+    auth.signInWithEmailAndPassword(email, password)
+        .then(handleAuthSuccess)
+        .catch(showError);
+        
+    auth.createUserWithEmailAndPassword(email, password)
+        .then(handleAuthSuccess)
+        .catch(showError);
+    </script>
+</body>
+</html>
